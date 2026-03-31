@@ -3,8 +3,11 @@ import inquirer from 'inquirer'
 import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
+import { fileURLToPath } from 'url'
 
-const TEMPLATE_PATH = '../SurvivalcraftMod'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const TEMPLATE_PATH = path.resolve(__dirname, '..', 'SurvivalcraftMod')
 
 function copyDir(src: string, dest: string): void {
   if (!fs.existsSync(src)) return
