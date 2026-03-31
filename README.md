@@ -1,4 +1,4 @@
-# scmod
+# scmod-cli
 
 Survivalcraft 模组创建 CLI 工具
 
