@@ -1,4 +1,38 @@
-node_modules/
-dist/
-*.log
+## .NET
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pdb
+*.nupkg
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+*.build.log
+*.cache
+*.lock
+
+## Visual Studio
+.vs/
+*.vspscc
+*.vssscc
+*.sublime-workspace
+
+## JetBrains Rider
+*.DotSettings.user
+*.sln.DotSettings.user
+
+## OS
 .DS_Store
+Thumbs.db
+
+## Test output
+test-output/

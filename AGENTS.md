@@ -1,160 +1,77 @@
-# Agent Guidelines for scmod
-
-This is a CLI tool for creating Survivalcraft mod projects from templates.
+# AGENTS.md - scmod-cli
 
 ## Project Overview
+.NET 10.0 CLI tool (`scmod`) for scaffolding Survivalcraft game mods.
 
-- **Type**: Node.js CLI tool
-- **Language**: TypeScript
-- **Main entry**: `src/index.ts`
-- **Package manager**: npm
+## Build/Test Commands
 
-## Commands
-
-### Install dependencies
 ```bash
-npm install
+# Build
+dotnet build
+
+# Run (from repo root)
+dotnet run -- new MyMod
+
+# Run with specific entry point
+dotnet run --project src/ScmodCli -- new MyMod
+
+# Build and run as tool
+dotnet pack
+dotnet tool install -g --add-source ./nupkg ScmodCli
+scmod new MyMod
+
+# Clean
+dotnet clean
 ```
 
-### Build project
-```bash
-npm run build
-```
+**No test framework configured.** No automated tests exist. Manual testing is done by running the CLI and inspecting output in `test-output/`.
 
-### Run the CLI
-```bash
-# Development mode (build + run)
-npm run dev new <project-name>
+## Code Style
 
-# Build then run
-npm run build && node dist/index.js new <project-name>
-
-# Or after npm install -g
-scmod new <project-name>
-```
-
-### Run tests
-```bash
-npm test
-```
-Currently there are no tests. To add tests, consider using Jest with ts-jest.
-
-### Type check
-```bash
-npx tsc --noEmit
-```
-
-### Lint
-```bash
-# No linting configured - run manually with:
-npm install --save-dev eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
-npx eslint src/ --ext .ts
-```
-
-### Format
-```bash
-# No formatter configured - run manually with:
-npm install --save-dev prettier
-npx prettier --write src/
-```
-
-## Code Style Guidelines
-
-### General
-- Use TypeScript (no plain JavaScript)
-- Use ES modules `import/export` (with `"type": "module"` in package.json)
-- 2-space indentation
-- No semicolons at line endings
-- Use single quotes for strings
-- Trailing commas in arrays and objects
-
-### File Structure
-```
-src/
-  index.ts        # Main entry point
-  # Add additional modules as needed
-```
-
-### Naming Conventions
-- **Files**: kebab-case (e.g., `my-module.ts`)
-- **Functions**: camelCase (e.g., `createProject`, `copyDir`)
-- **Constants**: UPPER_SNAKE_CASE (e.g., `TEMPLATE_PATH`)
-- **Classes**: PascalCase (e.g., `ProjectCreator`)
-- **Interfaces**: PascalCase with `I` prefix (e.g., `IProjectOptions`)
+### Structure
+- Single project: `src/ScmodCli/`
+- File-scoped namespaces preferred (`namespace ScmodCli.Commands;`)
+- Static classes for command logic (`ProjectCreator`, `TemplateExtractor`)
+- `Program.cs` uses top-level statements with explicit `class Program` and `Main` method
 
 ### Imports
-```typescript
-// Use ES modules with type annotations
-import inquirer from 'inquirer'
-import fs from 'fs'
-import path from 'path'
-import { execSync } from 'child_process'
-```
+- Implicit usings enabled in `.csproj`
+- Explicit `using` directives at file top, before namespace
+- Fully qualify when ambiguous: `System.Diagnostics.ProcessStartInfo`
 
-### TypeScript Specific
-- Always define return types for functions
-- Use interfaces for object shapes
-- Enable strict mode in tsconfig.json
-- Avoid using `any` type
+### Naming
+- Classes: PascalCase (`ProjectCreator`)
+- Public methods: PascalCase with `Async` suffix (`CreateAsync`)
+- Private methods: PascalCase (`ValidateProjectName`, `CopyDirectory`, `ReplaceInFile`)
+- Variables/parameters: camelCase (`projectName`, `outputDir`, `modinfoPath`)
+- Namespaces match folder structure (`ScmodCli`, `ScmodCli.Commands`)
 
-### Functions
-- Use arrow functions or function declarations consistently
-- Keep functions small and focused
-- Use descriptive names
+### Types
+- Nullable reference types enabled (`<Nullable>enable</Nullable>`)
+- Use `string?` for nullable strings, `string.Empty` or `??` for defaults
+- Prefer `var` when type is obvious; explicit types for clarity
+- Use `HashSet<string>` with `StringComparer.OrdinalIgnoreCase` for case-insensitive sets
+- Tuple deconstruction for paired data: `(string oldStr, string newStr)[]`
+
+### Async Patterns
+- All I/O methods are `async Task` or `async Task<T>`
+- Accept `CancellationToken` where applicable (via `SetAction` callbacks)
+- Use `await` consistently: `WaitForExitAsync()`, `ReadToEndAsync()`, `ReadAllTextAsync()`
 
 ### Error Handling
-- Use `try/catch` for operations that may fail
-- Use `process.exit(1)` for fatal errors
-- Log errors with `console.error()`
+- Write errors to `Console.Error` with `"Error: "` prefix
+- Fatal errors: call `Environment.Exit(1)` then `return`
+- Wrap risky operations (JSON parsing, git init) in `try/catch`
+- Use null-coalescing: `?? string.Empty`, `?? "UnknownMod"`
+- Throw `InvalidOperationException` for unrecoverable internal errors
 
-### Example Pattern
-```typescript
-interface ProjectOptions {
-  name: string
-  gitInit: boolean
-}
+### Output
+- Success messages prefixed with `✓`
+- Warnings prefixed with `⚠`
+- Use interpolated strings: `$"Created: {path}"`
 
-function createProject(options: ProjectOptions): void {
-  if (!options.name) {
-    console.error('Error: project name is required')
-    process.exit(1)
-  }
-
-  try {
-    const result = someOperation(options.name)
-    console.log(`Success: ${result}`)
-  } catch (e) {
-    console.error(`Error: ${e instanceof Error ? e.message : 'Unknown error'}`)
-    throw e
-  }
-}
-```
-
-### Output Formatting
-- Use template literals for string interpolation
-- Prefix success messages with `✓`
-- Prefix warning messages with `⚠`
-- Prefix error messages with `Error:`
-- Use backticks for logging: `` console.log(`Value: ${value}`) ``
-
-## Working with this Project
-
-### Creating a new mod project
-```bash
-npm run dev new my-mod
-```
-
-This copies the template from `../SurvivalcraftMod` (relative to this project) and renames files/contents.
-
-### Adding new features
-1. Edit `src/index.ts` for CLI commands
-2. Follow the existing code patterns
-3. Run `npm run build` to compile
-4. Test manually with `node dist/index.js <command>`
-
-### Best Practices
-- Always check if directories/files exist before operations
-- Use `{ recursive: true }` for directory creation
-- Handle errors gracefully
-- Provide clear console output
-- Run type checking before committing: `npx tsc --noEmit`
+### Formatting
+- 4-space indentation, CRLF line endings
+- Braces on new lines for class/method bodies
+- Expression-bodied members acceptable for simple methods
+- Max line length: ~150 chars
