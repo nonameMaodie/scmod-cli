@@ -7,7 +7,26 @@ import { fileURLToPath } from 'url'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-const TEMPLATE_PATH = path.resolve(__dirname, '..', 'SurvivalcraftMod')
+
+function getTemplatePath(): string {
+  const devPath = path.resolve(__dirname, '..', 'SurvivalcraftMod')
+  if (fs.existsSync(devPath)) {
+    return devPath
+  }
+  const globalPath = path.resolve(__dirname, '..', '..', 'SurvivalcraftMod')
+  if (fs.existsSync(globalPath)) {
+    return globalPath
+  }
+  console.error('Error: Template not found.')
+  process.exit(1)
+}
+
+function validateProjectName(name: string): boolean {
+  if (!name || /[<>:"/\\|?*]/.test(name) || /^\.|\.$/.test(name)) {
+    return false
+  }
+  return true
+}
 
 function copyDir(src: string, dest: string): void {
   if (!fs.existsSync(src)) return
@@ -49,15 +68,28 @@ interface ModInfo {
 }
 
 async function createProject(projectName: string): Promise<void> {
+  if (!validateProjectName(projectName)) {
+    console.error(`Error: Invalid project name "${projectName}".`)
+    process.exit(1)
+  }
+
   const projectPath = path.join(process.cwd(), projectName)
+  const absoluteProjectPath = path.resolve(projectPath)
+  const absoluteCwd = path.resolve(process.cwd())
+
+  if (!absoluteProjectPath.startsWith(absoluteCwd)) {
+    console.error('Error: Project path escapes current directory.')
+    process.exit(1)
+  }
 
   if (fs.existsSync(projectPath)) {
     console.error(`Error: Directory "${projectName}" already exists.`)
     process.exit(1)
   }
 
-  console.log(`Copying template from ${TEMPLATE_PATH}...`)
-  copyDir(TEMPLATE_PATH, projectPath)
+  const templatePath = getTemplatePath()
+  console.log(`Copying template from ${templatePath}...`)
+  copyDir(templatePath, projectPath)
   console.log(`✓ Copied template to: ${projectName}`)
 
   const replacements: [string, string][] = [
@@ -77,10 +109,15 @@ async function createProject(projectName: string): Promise<void> {
   console.log(`✓ Renamed: src/SurvivalcraftMod.csproj → src/${projectName}.csproj`)
 
   const modinfoPath = path.join(projectPath, 'src', 'modinfo.json')
-  const modinfo: ModInfo = JSON.parse(fs.readFileSync(modinfoPath, 'utf8'))
-  modinfo.Name = projectName
-  fs.writeFileSync(modinfoPath, JSON.stringify(modinfo, null, 2), 'utf8')
-  console.log(`✓ Updated: modinfo.json (Name: ${projectName})`)
+  try {
+    const modinfo: ModInfo = JSON.parse(fs.readFileSync(modinfoPath, 'utf8'))
+    modinfo.Name = projectName
+    fs.writeFileSync(modinfoPath, JSON.stringify(modinfo, null, 2), 'utf8')
+    console.log(`✓ Updated: modinfo.json (Name: ${projectName})`)
+  } catch {
+    console.error(`Error: Failed to parse modinfo.json.`)
+    process.exit(1)
+  }
 
   const class1Path = path.join(projectPath, 'src', 'Class1.cs')
   if (fs.existsSync(class1Path)) {
@@ -103,7 +140,7 @@ async function createProject(projectName: string): Promise<void> {
   ])
 
   if (answers.gitInit) {
-    const gitignoreSrc = path.join(TEMPLATE_PATH, '.gitignore')
+    const gitignoreSrc = path.join(templatePath, '.gitignore')
     const gitignoreDest = path.join(projectPath, '.gitignore')
 
     if (fs.existsSync(gitignoreSrc)) {
@@ -114,7 +151,7 @@ async function createProject(projectName: string): Promise<void> {
     try {
       execSync('git init', { cwd: projectPath, stdio: 'ignore' })
       console.log('✓ Initialized git repository')
-    } catch (e) {
+    } catch {
       console.log('⚠ git init failed (git may not be installed)')
     }
   }

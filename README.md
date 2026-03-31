@@ -6,7 +6,7 @@ Survivalcraft 模组创建 CLI 工具
 
 ```bash
 npm install
-npm install -g  # 全局安装
+npm install -g . #全局安装
 ```
 
 ## 使用

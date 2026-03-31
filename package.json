@@ -1,5 +1,5 @@
 {
-  "name": "scmod",
+  "name": "scmod-cli",
   "version": "1.0.0",
   "description": "Survivalcraft 模组创建 CLI 工具",
   "main": "dist/index.js",
