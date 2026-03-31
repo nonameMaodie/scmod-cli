@@ -1,0 +1,97 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Game</RootNamespace>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>SurvivalcraftMod</AssemblyName>
+        <Deterministic>true</Deterministic>
+        <LangVersion>preview</LangVersion>
+        <!-- 默认编译所有文件 -->
+        <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+        <Nullable>disable</Nullable>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateDependencyFile>false</GenerateDependencyFile>
+        <ErrorReport>prompt</ErrorReport>
+        <UseWindowsDesktopSDK>true</UseWindowsDesktopSDK>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DebugType>none</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+    </PropertyGroup>
+
+    <!-- 引入 libs目录下所有 DLL，设置 Private=false 以避免版本冲突 -->
+    <ItemGroup>
+        <Reference Include="libs\*.dll">
+            <Private>false</Private>
+            <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+        </Reference>
+    </ItemGroup>
+
+    <!-- 定义要排除的 DLL 文件列表 -->
+    <ItemGroup>
+        <ExcludedFromPack Include="$(TargetDir)Engine.dll" />
+        <ExcludedFromPack Include="$(TargetDir)EntitySystem.dll" />
+        <ExcludedFromPack Include="$(TargetDir)Survivalcraft.dll" />
+        <ExcludedFromPack Include="$(TargetDir)HarmonyLib.dll" />
+        <ExcludedFromPack Include="$(TargetDir)*.pdb" />
+    </ItemGroup>
+
+    <!-- 打包时需要包含的文件（排除特定文件） -->
+    <ItemGroup>
+        <FilesToInclude Include="$(TargetDir)**\*.*" Exclude="@(ExcludedFromPack)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="icon.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="modinfo.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <!-- 手动添加需要编译的文件 -->
+    <!-- <ItemGroup>
+        <Compile Include="SurvivalcraftMod.cs"/>
+    </ItemGroup> -->
+    
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <PropertyGroup>
+            <!-- 读取环境变量 SURVIVALCRAFT_MOD_Debug_PATH 和 SURVIVALCRAFT_MOD_PATH -->
+            <DebugOutputPath>$([System.Environment]::GetEnvironmentVariable('SURVIVALCRAFT_MOD_Debug_PATH'))</DebugOutputPath>
+            <BaseOutputPath>$([System.Environment]::GetEnvironmentVariable('SURVIVALCRAFT_MOD_PATH'))</BaseOutputPath>
+            
+            <!-- 如果环境变量 SURVIVALCRAFT_MOD_PATH 未设置，回退到原TargetDir的父目录 -->
+            <FallbackPath>$([System.IO.Path]::GetFullPath('$(OutputPath)..'))</FallbackPath>
+            <BasePath Condition="'$(BaseOutputPath)' != ''">$(BaseOutputPath)</BasePath>
+            <BasePath Condition="'$(BasePath)' == ''">$(FallbackPath)</BasePath>
+            
+            <!-- 最终路径：使用环境变量或回退路径 + 程序集名 -->
+            <PathOfDebugScMod>$(DebugOutputPath)\$(AssemblyName).scmod</PathOfDebugScMod>
+            <PathOfScMod>$(BasePath)\$(AssemblyName).scmod</PathOfScMod>
+        </PropertyGroup>
+
+        <ZipDirectory Condition="'$(DebugOutputPath)' != ''" 
+                      SourceDirectory="$(TargetDir)" DestinationFile="$(PathOfDebugScMod)" Overwrite="true" />
+        <ZipDirectory SourceDirectory="$(TargetDir)" DestinationFile="$(PathOfScmod)" Overwrite="true" />
+
+        <Message Condition="'$(DebugOutputPath)' != ''" Text="已打包 scmod 文件到: $(PathOfDebugScMod)" Importance="high" />
+        <Message Text="已打包 scmod 文件到: $(PathOfScMod)" Importance="high" />
+    </Target>
+
+</Project>
