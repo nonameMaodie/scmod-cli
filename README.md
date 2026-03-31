@@ -16,7 +16,7 @@ npm install -g #全局安装
 # 开发模式
 npm run dev new <project-name>
 
-# 生存模式
+# 生产模式
 npm run start new <project-name>
 
 # 全局安装后
