@@ -6,7 +6,8 @@ Survivalcraft 模组创建 CLI 工具
 
 ```bash
 npm install
-npm install -g . #全局安装
+npm run build
+npm install -g #全局安装
 ```
 
 ## 使用
@@ -15,9 +16,8 @@ npm install -g . #全局安装
 # 开发模式
 npm run dev new <project-name>
 
-# 构建后运行
-npm run build
-node dist/index.js new <project-name>
+# 生存模式
+npm run start new <project-name>
 
 # 全局安装后
 scmod new <project-name>
@@ -41,21 +41,9 @@ scmod new my-awesome-mod
 scmod/
   src/
     index.ts      # 主入口
-  tsconfig.json  # TypeScript 配置
-  package.json   # 项目配置
-```
-
-## 开发
-
-```bash
-# 安装依赖
-npm install
-
-# 构建
-npm run build
-
-# 开发模式（构建后直接运行）
-npm run dev new my-mod
+  tsconfig.json   # TypeScript 配置
+  package.json    # 项目配置
+SurvivalcraftMod/ # 模组模板项目
 ```
 
 ## 技术栈
@@ -63,3 +51,7 @@ npm run dev new my-mod
 - TypeScript
 - Node.js
 - inquirer (命令行交互)
+
+## 注意事项
+
+- `npm install -g` 全局安装后请不要删除本地项目，否则 `scmod new <project-name>` 命令会失效
