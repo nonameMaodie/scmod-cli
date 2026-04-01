@@ -86,6 +86,13 @@
             <PathOfScMod>$(BasePath)\$(AssemblyName).scmod</PathOfScMod>
         </PropertyGroup>
 
+        <!-- 确保DebugOutputPath目录存在（仅当环境变量 SURVIVALCRAFT_MOD_Debug_PATH 存在时执行）-->
+        <MakeDir 
+            Condition="'$(DebugOutputPath)' != ''"  
+            Directories="$(DebugOutputPath)"
+            ContinueOnError="false"
+        />
+
         <ZipDirectory Condition="'$(DebugOutputPath)' != ''" 
                       SourceDirectory="$(TargetDir)" DestinationFile="$(PathOfDebugScMod)" Overwrite="true" />
         <ZipDirectory SourceDirectory="$(TargetDir)" DestinationFile="$(PathOfScmod)" Overwrite="true" />
