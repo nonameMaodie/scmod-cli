@@ -89,9 +89,7 @@ public static class ProjectCreator
             RenameFile(projectPath, "SurvivalcraftMod.DotSettings", $"{projectName}.DotSettings");
             Console.WriteLine($"✓ Renamed: SurvivalcraftMod.DotSettings → {projectName}.DotSettings");
 
-            Console.Write("Do you want to initialize git repository? (Y/n): ");
-            var response = Console.ReadLine()?.Trim().ToLowerInvariant();
-            var gitInit = string.IsNullOrEmpty(response) || response == "y" || response == "yes";
+            var gitInit = true;
 
             if (gitInit)
             {
